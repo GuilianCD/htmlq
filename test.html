@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for htmlq</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+        }
+        .content {
+            display: flex;
+            justify-content: space-between;
+        }
+        .sidebar {
+            width: 30%;
+            background-color: #eaeaea;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+        .main-content {
+            width: 65%;
+        }
+        .main-content .article {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .main-content .article h2 {
+            color: #555;
+        }
+        .main-content .article p {
+            color: #666;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .footer p {
+            color: #777;
+        }
+        #special-note {
+            background-color: #ffeb3b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .duplicate-class {
+            background-color: #d1c4e9;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .duplicate-class > p {
+            color: #512da8;
+        }
+        .duplicate-class + .duplicate-class {
+            margin-top: 20px;
+        }
+        .duplicate-class ~ .duplicate-class {
+            border: 2px solid #673ab7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to the Test Page</h1>
+        </div>
+        <div class="content">
+            <div class="sidebar">
+                <ul>
+                    <li><a href="#section1">Section 1</a></li>
+                    <li><a href="#section2">Section 2</a></li>
+                    <li><a href="#section3">Section 3</a></li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="article" id="section1">
+                    <h2>Section 1: Introduction</h2>
+                    <p>This is the introduction section. It provides an overview of the content.</p>
+                    <div class="duplicate-class">
+                        <p>This is a duplicate class element inside Section 1.</p>
+                    </div>
+                </div>
+                <div class="article" id="section2">
+                    <h2>Section 2: Main Content</h2>
+                    <p>This is the main content section. It contains the bulk of the information.</p>
+                    <div class="nested">
+                        <p>This is a nested paragraph inside the main content.</p>
+                        <div class="deeply-nested">
+                            <p>This is a deeply nested paragraph.</p>
+                        </div>
+                    </div>
+                    <div class="duplicate-class">
+                        <p>This is another duplicate class element inside Section 2.</p>
+                    </div>
+                    <div class="duplicate-class">
+                        <p>This is yet another duplicate class element inside Section 2.</p>
+                    </div>
+                </div>
+                <div class="article" id="section3">
+                    <h2>Section 3: Conclusion</h2>
+                    <p>This is the conclusion section. It summarizes the content.</p>
+                    <div class="duplicate-class">
+                        <p>This is a duplicate class element inside Section 3.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="special-note">
+            <p>This is a special note with a unique ID.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2023 Test Page. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document is fully loaded and ready to be processed.');
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,469 @@
+
+local function trim(str)
+	return str:match("^%s*(.-)%s*$")
+end
+
+
+
+local M = {}
+
+local RAW_TEXT_TAGS = {
+	script = true,
+	style = true,
+	pre = true
+}
+
+-- void tags are content-less, or so-called "self-closing", tags
+local VOID_TAGS = {
+	area = true,
+	base = true,
+	br = true,
+	col = true,
+	embed = true,
+	hr = true,
+	img = true,
+	input = true,
+	link = true,
+	meta = true,
+	param = true, -- deprecated
+	source = true,
+	track = true,
+	wbr = true,
+}
+
+
+function M.make_dom_element( tag_name, parent_elem )
+	local o = {
+		tag_name = tag_name,
+		parent = parent_elem,
+		children = {},
+		attributes = {},
+		content = ""
+	}
+
+	if parent_elem then
+		table.insert( parent_elem.children, o )
+	end
+
+	local mt = {
+		__newindex = function(table, key, value)
+			-- Allow modification of existing attributes
+			if rawget(table.attributes, key) ~= nil then
+				rawset(table.attributes, key, value)
+			else
+				-- Prevent adding new attributes
+				error("Cannot add new attribute to DOM element: " .. tostring(key))
+			end
+		end,
+		__index = function(table, key)
+			-- Allow access to attributes
+			return rawget(table.attributes, key)
+		end
+	}
+
+	setmetatable(o, mt)
+	return o
+end
+
+
+
+function M.preprocess( content )
+	-- remove "self closing" slashes as they MUST be ignored (spec)
+	-- and would cause problems
+	content = content:gsub("/%s*>", ">")
+	-- remove whitespace at the start of "</closing>" tags.
+	content = content:gsub("</%s*/%s*", "</")
+
+	return content
+end
+
+
+function M.tokenise( content )
+	local TOKENS = {}
+
+	-- state
+	local in_tag = false
+	local currently_opened_quotes = nil
+	local text_memory = ""
+
+	local skipping_from = nil
+	local skip_target = nil
+	local skip_mode = "before"
+
+	local function set_skipping_to( str, mode )
+		mode = mode or "before"
+		if mode ~= "before" and mode ~= "after" then
+			error("Unexpected skipping mode: " .. mode .. ", in looking for " .. str)
+		end
+
+		skip_target = str
+		skip_mode = mode
+	end
+
+
+
+	local i = 1
+
+	while i <= #content do
+		local char = content:sub(i,i)
+
+		if skip_target ~= nil then
+			if skipping_from == nil then
+				skipping_from = i
+			end
+
+			if skip_mode == "before" then
+				local end_i =  i + #skip_target - 1
+
+				if trim(content:sub(i, end_i)) == skip_target then
+					table.insert( TOKENS, {type="TEXT", value=content:sub(skipping_from, i-1)} )
+
+					-- release from skip
+					--i = end_i - 1
+					i = i - 1
+					skip_target = nil
+					skipping_from = nil
+				end
+
+				goto continue
+			else
+				local start_i =  i - #skip_target + 1
+
+				if trim(content:sub(start_i, i)) == skip_target then
+					table.insert( TOKENS, {type="TEXT", value=content:sub(skipping_from, start_i-1)} )
+
+					-- release from skip
+					i = start_i
+					skip_target = nil
+					skipping_from = nil
+				end
+
+				goto continue
+			end
+
+
+
+		end
+
+
+
+
+		if char == "<" then
+			if content:sub(i, i+3) == "<!--" then
+				set_skipping_to("-->", "after")
+				goto continue
+			end
+
+			if content:sub(i, i+1) == "<!" then
+				i = content:find(">", i)
+				goto continue
+			end
+
+			---------------------------------
+			if #text_memory ~= 0 then
+				table.insert( TOKENS, {type="TEXT", value=text_memory} )
+				text_memory = ""
+			end
+
+			in_tag = true
+
+			-- closing tag
+			if content:sub(i, i+1) == "</" then
+				table.insert( TOKENS, {type="START_CLOSING_TAG"} )
+				i = i+1
+				goto continue
+			end
+
+			table.insert( TOKENS, {type="START_OPENING_TAG"} )
+			goto continue
+		end
+
+		if char == ">" then
+			if #text_memory ~= 0 then
+				if in_tag and currently_opened_quotes == nil then
+					local word = trim(text_memory)
+
+					if TOKENS[#TOKENS] and ( TOKENS[#TOKENS].type == "START_OPENING_TAG") then
+						if RAW_TEXT_TAGS[word] then
+							print("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
+							-- made possible because of the whitespace removal at the start
+							set_skipping_to("</" .. word)
+						end
+					end
+
+					table.insert( TOKENS, {type="WORD", value=word})
+				else
+					table.insert( TOKENS, {type="TEXT", value=text_memory} )
+				end
+
+				text_memory = ""
+			end
+
+			in_tag = false
+			table.insert( TOKENS, {type = "END_TAG"} )
+
+			goto continue
+		end
+
+
+
+		if in_tag then
+			if currently_opened_quotes == nil and char:match("%s") then
+				if #text_memory ~= 0 then
+					local word = trim(text_memory)
+
+					if TOKENS[#TOKENS] and ( TOKENS[#TOKENS].type == "START_OPENING_TAG" ) then
+						if RAW_TEXT_TAGS[word] then
+							print("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
+							-- made possible because of the whitespace removal at the start
+							set_skipping_to("</" .. word)
+							text_memory = ""
+
+							-- advance to closing ">"
+							i = content:find(">", i)
+						end
+					end
+
+					table.insert( TOKENS, {type="WORD", value=word})
+					text_memory = ""
+
+					goto continue
+				end
+			end
+
+
+			if char == "'" or char == '"' then
+				if currently_opened_quotes == char then
+					currently_opened_quotes = nil
+				else
+					currently_opened_quotes = char
+				end
+
+				text_memory = text_memory .. char
+				goto continue
+			end
+
+			text_memory = text_memory .. char
+			goto continue
+		else
+			text_memory = text_memory .. char
+			goto continue
+		end
+
+
+		::continue::
+		i = i+1
+	end
+
+
+	return TOKENS
+end
+
+
+function M.parse_tokens_into_document( TOKENS )
+	local DOCUMENT = M.make_dom_element(nil, nil)
+	local current_doc_element = DOCUMENT
+	local in_opening_tag_for = nil
+
+	local i = 1
+	while i <= #TOKENS do
+		local token = TOKENS[i]
+
+		if token.type == "WORD" then
+			if current_doc_element.tag_name == "#text" then
+				current_doc_element = current_doc_element.parent
+			end
+
+
+			if i > 0 and TOKENS[i-1].type == "START_OPENING_TAG" then
+				local new_elem = M.make_dom_element( token.value, current_doc_element )
+				current_doc_element = new_elem
+				in_opening_tag_for = token.value
+
+				goto continue
+			end
+
+			if i > 0 and TOKENS[i-1].type == "START_CLOSING_TAG" then
+				local curr_elem = current_doc_element
+
+				while curr_elem.parent and curr_elem.tag_name ~= token.value do
+					curr_elem = curr_elem.parent
+				end
+
+				if curr_elem.parent == nil then
+					-- reached DOCUMENT root
+					print("Warning: reached document root while trying to match for closing " .. token.value .. " token.")
+					current_doc_element = DOCUMENT
+				else
+					current_doc_element = curr_elem.parent
+				end
+
+
+				goto continue
+			end
+
+
+
+			if in_opening_tag_for then
+				local pattern = "([%w-]+)=['\"](.-)['\"]"
+
+				local name, raw_value = token.value:match(pattern)
+
+				if name == nil or raw_value == nil then
+					name = token.value:match("([%w-]+)")
+
+					if name == nil then
+						error("Unrecognised word: " .. name)
+					end
+
+					current_doc_element.attributes[name] = true
+
+					goto continue
+				end
+
+
+
+				local value = nil
+				if raw_value == "" or raw_value == nil then
+					value = nil
+					--elseif raw_value:find("%S+%s+%S+") then
+					--	value = {}
+					--	print(raw_value)
+					--	for word in raw_value:gmatch("%S+") do
+					--		table.insert( value, word )
+					--	end
+				else
+					value = trim(raw_value)
+				end
+
+				current_doc_element.attributes[name] = value
+
+				goto continue
+			end
+
+		end
+
+
+		if token.type == "END_TAG" then
+			if in_opening_tag_for then
+				if VOID_TAGS[in_opening_tag_for] then
+					if current_doc_element.parent == nil then
+						-- reached DOCUMENT root
+						current_doc_element = DOCUMENT
+					else
+						current_doc_element = current_doc_element.parent
+					end
+				end
+
+			end
+
+			in_opening_tag_for = nil
+
+			goto continue
+		end
+
+
+		if token.type == "TEXT" then
+			local new_elem = M.make_dom_element( "#text", current_doc_element )
+			new_elem.content = token.value
+			current_doc_element = new_elem
+
+			goto continue
+		end
+
+
+		::continue::
+		i = i+1
+	end
+
+	return DOCUMENT
+end
+
+
+function M.clean_text_nodes(node)
+	if node.tag_name ~= "#text" then
+		-- Don't clean anything in raw text tags
+		if RAW_TEXT_TAGS[node.tag_name] then
+			return
+		end
+
+		for _, child in ipairs(node.children) do
+			M.clean_text_nodes( child )
+		end
+		return
+	end
+
+	-- purge content-less text nodes
+	if #trim(node.content) == 0 then
+		if not node.parent then
+			error("Text node without a parent; should be impossible !")
+		end
+
+		for i, child in ipairs(node.parent.children) do
+			if child == node then
+				table.remove( node.parent.children, i )
+				break
+			end
+		end
+
+		return
+	end
+
+	node.content = trim( node.content:gsub("%s+", " ") )
+end
+
+
+function M.print_document(node, indent)
+	-- Default indentation is 0 (root level)
+	indent = indent or 0
+
+	local indent_level_str = "  "
+	-- Create the indentation string (e.g., "  " for each level)
+	local indent_str = string.rep(indent_level_str, indent)
+
+	if node.tag_name == "#text" then
+		print(indent_str .. "<#text>\n" .. node.content .. "\n" .. indent_str .. "</#text>")
+		return
+	end
+
+	local node_name = ""
+
+	-- Print the current node's tag name
+	node_name = node_name .. indent_str .. "<" .. (node.tag_name or "#root")
+
+	-- Print attributes if any
+	if next(node.attributes) ~= nil then
+		for attr, value in pairs(node.attributes) do
+			--print(indent_str .. "  " .. attr .. " = " .. tostring(value))
+			node_name = node_name .. " " .. attr .. "=\"" .. tostring(value) .. "\""
+		end
+	end
+
+	node_name = node_name .. ">"
+
+	print( node_name )
+
+
+	-- Recursively print children
+	for _, child in ipairs(node.children) do
+		M.print_document(child, indent + 1)
+	end
+
+	-- Print the closing tag
+	print(indent_str .. "</" .. (node.tag_name or "#root") .. ">")
+end
+
+
+function M.parse( html_string )
+	local clean_html = M.preprocess( html_string )
+
+	local tokens = M.tokenise( clean_html )
+
+	local document = M.parse_tokens_into_document( tokens )
+
+	local cleaned_doc = M.clean_text_nodes( document )
+
+	return cleaned_doc
+end
+
+return M
