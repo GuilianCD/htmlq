@@ -58,7 +58,7 @@ function M.make_dom_element( tag_name, parent_elem )
 			end
 		end,
 
-		get_next_siblings = function( self )
+		get_next_sibling = function( self )
 			if not self.parent then return nil end
 
 			local found_self = false
