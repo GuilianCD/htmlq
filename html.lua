@@ -74,6 +74,18 @@ function M.make_dom_element( tag_name, parent_elem )
 
 			return nil
 		end,
+
+		check_simple_selector = function( self, selector )
+			return M.check_simple_selector( self, selector )
+		end,
+
+		foreach = function( self, fn )
+			fn( self )
+
+			for _, child in ipairs(self.children or {}) do
+				child:foreach( fn )
+			end
+		end
 	}
 
 	if parent_elem then
@@ -292,6 +304,64 @@ function M.tokenise( content )
 
 
 	return TOKENS
+end
+
+
+function M.check_simple_selector(element, selector)
+		-- Skip text nodes
+		if element.tag_name == ":text" then
+			return false
+		end
+
+		-- Check tag name if specified
+		if selector.tag_name and element.tag_name ~= selector.tag_name then
+			return false
+		end
+
+		-- Check ID if specified
+		if selector.id and element.attributes.id ~= selector.id then
+			return false
+		end
+
+		-- Check classes if specified
+		if selector.class and #selector.class > 0 then
+			local element_classes = element.attributes.class
+			if not element_classes then
+				return false
+			end
+
+			for _, class in ipairs(selector.class) do
+				local found = false
+				for _, elem_class in ipairs(element_classes) do
+					if elem_class == class then
+						found = true
+						break
+					end
+				end
+				if not found then
+					return false
+				end
+			end
+		end
+
+		return true
+	end
+
+function M.query_simple_selector(document, selector)
+	local matches = {}
+
+	local function traverse(node)
+		if M.check_simple_selector(node, selector) then
+			table.insert(matches, node)
+		end
+
+		for _, child in ipairs(node.children) do
+			traverse(child)
+		end
+	end
+
+	traverse(document)
+	return matches
 end
 
 
