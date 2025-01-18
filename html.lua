@@ -523,23 +523,40 @@ function M.clean_text_nodes(node)
 end
 
 
-function M.print_document(node, indent)
+function M.tostring(node, indent, include_internal_pseudoelements)
 	-- Default indentation is 0 (root level)
 	indent = indent or 0
+	include_internal_pseudoelements = include_internal_pseudoelements or false
+
+	local is_pseudo_element = (node.tag_name or ":root"):sub(1,1) == ":"
+
 
 	local indent_level_str = "  "
 	-- Create the indentation string (e.g., "  " for each level)
 	local indent_str = string.rep(indent_level_str, indent)
 
 	if node.tag_name == ":text" then
-		print(indent_str .. "<:text>\n" .. node.content .. "\n" .. indent_str .. "</:text>")
-		return
+		local str = ""
+
+		if include_internal_pseudoelements then
+			str = str .. "<:text>"
+		end
+
+		str = str .. node.content
+
+		if include_internal_pseudoelements then
+			str = str .. "</:text>"
+		end
+
+		return str
 	end
 
 	local node_name = ""
 
+	if not is_pseudo_element or include_internal_pseudoelements then
 	-- Print the current node's tag name
-	node_name = node_name .. indent_str .. "<" .. (node.tag_name or ":root")
+		node_name = node_name .. "\n" .. indent_str .. "<" .. (node.tag_name or ":root")
+	end
 
 	-- Print attributes if any
 	if next(node.attributes) ~= nil then
@@ -557,19 +574,36 @@ function M.print_document(node, indent)
 		end
 	end
 
-	node_name = node_name .. ">"
+	if not is_pseudo_element or include_internal_pseudoelements then
+		node_name = node_name .. ">"
+	end
 
-	print( node_name )
+	--print( node_name )
 
+	local next_indent = indent + 1
+	if is_pseudo_element and not include_internal_pseudoelements then
+		next_indent = indent
+	end
 
 	-- Recursively print children
 	for _, child in ipairs(node.children) do
-		M.print_document(child, indent + 1)
+		node_name = node_name .. M.tostring(child, next_indent, include_internal_pseudoelements)
 	end
 
-	-- Print the closing tag
-	print(indent_str .. "</" .. (node.tag_name or ":root") .. ">")
+	if not VOID_TAGS[node.tag_name] and ( not is_pseudo_element or include_internal_pseudoelements ) then
+		-- Print the closing tag
+		local end_indent = ""
+		local closing_text_tag = "</:text>"
+		if node_name:sub(#node_name, #node_name) == ">" and node_name:sub(#node_name - #closing_text_tag + 1, #node_name) ~= closing_text_tag then
+			end_indent = "\n" .. indent_str
+		end
+		node_name = node_name .. end_indent .. "</" .. (node.tag_name or ":root") .. ">"
+	end
+
+	return node_name
 end
+
+
 
 
 
