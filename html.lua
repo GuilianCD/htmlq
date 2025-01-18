@@ -35,10 +35,38 @@ local VOID_TAGS = {
 function M.make_dom_element( tag_name, parent_elem )
 	local o = {
 		tag_name = tag_name,
-		parent = parent_elem,
-		children = {},
 		attributes = {},
-		content = ""
+		content = "",
+
+		children = {},
+		parent = parent_elem,
+
+		get_child_index = function( self )
+			if not self.parent then
+				return -1
+			end
+
+			for i, child in ipairs(self.parent.children) do
+				if child == self then return i end
+			end
+		end,
+
+		get_next_siblings = function( self )
+			if not self.parent then return nil end
+
+			local found_self = false
+			for _, child in ipairs(self.parent.children) do
+				if found_self then
+					return child
+				end
+
+				if child == self then
+					found_self = true
+				end
+			end
+
+			return nil
+		end,
 	}
 
 	if parent_elem then
@@ -376,6 +404,8 @@ function M.parse_tokens_into_document( TOKENS )
 		i = i+1
 	end
 
+	DOCUMENT = M.clean_text_nodes( DOCUMENT )
+
 	return DOCUMENT
 end
 
@@ -461,9 +491,7 @@ function M.parse( html_string )
 
 	local document = M.parse_tokens_into_document( tokens )
 
-	local cleaned_doc = M.clean_text_nodes( document )
-
-	return cleaned_doc
+	return document
 end
 
 return M
