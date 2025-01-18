@@ -350,18 +350,21 @@ function M.parse_tokens_into_document( TOKENS )
 				end
 
 
-
 				local value = nil
 				if raw_value == "" or raw_value == nil then
 					value = nil
-					--elseif raw_value:find("%S+%s+%S+") then
-					--	value = {}
-					--	print(raw_value)
-					--	for word in raw_value:gmatch("%S+") do
-					--		table.insert( value, word )
-					--	end
 				else
 					value = trim(raw_value)
+
+					if name == "class" then
+						local classes = {}
+
+						for class in value:gmatch("%S+") do
+							table.insert( classes, class )
+						end
+
+						value = classes
+					end
 				end
 
 				current_doc_element.attributes[name] = value
@@ -464,8 +467,16 @@ function M.print_document(node, indent)
 	-- Print attributes if any
 	if next(node.attributes) ~= nil then
 		for attr, value in pairs(node.attributes) do
-			--print(indent_str .. "  " .. attr .. " = " .. tostring(value))
-			node_name = node_name .. " " .. attr .. "=\"" .. tostring(value) .. "\""
+			if type(value) == "table" then
+				node_name = node_name .. " " .. attr .. "=\""
+				for i, val in ipairs( value ) do
+					if i > 1 then node_name = node_name .. " " end
+					node_name = node_name .. tostring(val)
+				end
+				node_name = node_name .. "\""
+			else
+				node_name = node_name .. " " .. attr .. "=\"" .. tostring(value) .. "\""
+			end
 		end
 	end
 
