@@ -298,7 +298,7 @@ function M.parse_tokens_into_document( TOKENS )
 		local token = TOKENS[i]
 
 		if token.type == "WORD" then
-			if current_doc_element.tag_name == "#text" then
+			if current_doc_element.tag_name == ":text" then
 				current_doc_element = current_doc_element.parent
 			end
 
@@ -392,7 +392,7 @@ function M.parse_tokens_into_document( TOKENS )
 
 
 		if token.type == "TEXT" then
-			local new_elem = M.make_dom_element( "#text", current_doc_element )
+			local new_elem = M.make_dom_element( ":text", current_doc_element )
 			new_elem.content = token.value
 			current_doc_element = new_elem
 
@@ -411,7 +411,7 @@ end
 
 
 function M.clean_text_nodes(node)
-	if node.tag_name ~= "#text" then
+	if node.tag_name ~= ":text" then
 		-- Don't clean anything in raw text tags
 		if RAW_TEXT_TAGS[node.tag_name] then
 			return
@@ -451,15 +451,15 @@ function M.print_document(node, indent)
 	-- Create the indentation string (e.g., "  " for each level)
 	local indent_str = string.rep(indent_level_str, indent)
 
-	if node.tag_name == "#text" then
-		print(indent_str .. "<#text>\n" .. node.content .. "\n" .. indent_str .. "</#text>")
+	if node.tag_name == ":text" then
+		print(indent_str .. "<:text>\n" .. node.content .. "\n" .. indent_str .. "</:text>")
 		return
 	end
 
 	local node_name = ""
 
 	-- Print the current node's tag name
-	node_name = node_name .. indent_str .. "<" .. (node.tag_name or "#root")
+	node_name = node_name .. indent_str .. "<" .. (node.tag_name or ":root")
 
 	-- Print attributes if any
 	if next(node.attributes) ~= nil then
@@ -480,8 +480,10 @@ function M.print_document(node, indent)
 	end
 
 	-- Print the closing tag
-	print(indent_str .. "</" .. (node.tag_name or "#root") .. ">")
+	print(indent_str .. "</" .. (node.tag_name or ":root") .. ">")
 end
+
+
 
 
 function M.parse( html_string )
