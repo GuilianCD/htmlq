@@ -3,6 +3,13 @@ local function trim(str)
 	return str:match("^%s*(.-)%s*$")
 end
 
+local function shallow_copy(t)
+  local t2 = {}
+  for k,v in pairs(t) do
+    t2[k] = v
+  end
+  return t2
+end
 
 
 local M = {}
@@ -407,7 +414,7 @@ function M.parse_tokens_into_document( TOKENS )
 		i = i+1
 	end
 
-	DOCUMENT = M.clean_text_nodes( DOCUMENT )
+	M.clean_text_nodes( DOCUMENT )
 
 	return DOCUMENT
 end
@@ -420,7 +427,7 @@ function M.clean_text_nodes(node)
 			return
 		end
 
-		for _, child in ipairs(node.children) do
+		for _, child in ipairs( shallow_copy(node.children) ) do
 			M.clean_text_nodes( child )
 		end
 		return
@@ -432,7 +439,7 @@ function M.clean_text_nodes(node)
 			error("Text node without a parent; should be impossible !")
 		end
 
-		for i, child in ipairs(node.parent.children) do
+		for i, child in ipairs( shallow_copy(node.parent.children) ) do
 			if child == node then
 				table.remove( node.parent.children, i )
 				break
