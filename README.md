@@ -34,6 +34,7 @@ Supported combinators are all the "basic" ones:
 
 ### TODO
 
+- [ ] `--text` option to only get the text in the matched elements
 - [ ] Universal selector (`*` to match any element)
 - [ ] Attribute selectors (`[attr="value"]`)
 - [ ] A way to "group" selectors, e.g. `aside {p, footer}` to select all `p`s and `footer`s in `aside`s ? 
