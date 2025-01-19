@@ -523,7 +523,7 @@ function M.clean_text_nodes(node)
 end
 
 
-function M.tostring(node, indent, include_internal_pseudoelements)
+function M._tostring(node, indent, include_internal_pseudoelements)
 	-- Default indentation is 0 (root level)
 	indent = indent or 0
 	include_internal_pseudoelements = include_internal_pseudoelements or false
@@ -587,7 +587,7 @@ function M.tostring(node, indent, include_internal_pseudoelements)
 
 	-- Recursively print children
 	for _, child in ipairs(node.children) do
-		node_name = node_name .. M.tostring(child, next_indent, include_internal_pseudoelements)
+		node_name = node_name .. M._tostring(child, next_indent, include_internal_pseudoelements)
 	end
 
 	if not VOID_TAGS[node.tag_name] and ( not is_pseudo_element or include_internal_pseudoelements ) then
@@ -603,7 +603,9 @@ function M.tostring(node, indent, include_internal_pseudoelements)
 	return node_name
 end
 
-
+function M.tostring(node, base_indent, include_internal_pseudoelements)
+	return trim( M._tostring(node, base_indent, include_internal_pseudoelements) )
+end
 
 
 
