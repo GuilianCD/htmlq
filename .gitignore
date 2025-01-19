@@ -1,0 +1,4 @@
+# Luastatic-generated file
+*.luastatic.c
+# Compiled executable from main.lua
+main
