@@ -4,9 +4,10 @@ local errors_buffer = {}
 
 local logger = {
 	print = function( str )
-		print( str )
+		print( str or "" )
 	end,
 	printerr = function( str)
+		str = str or ""
 		if str:sub(#str,#str) ~= "\n" then
 			str = str .. "\n"
 		end
