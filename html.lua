@@ -1,3 +1,4 @@
+local logger = require(".logging")
 
 local function trim(str)
 	return str:match("^%s*(.-)%s*$")
@@ -232,7 +233,7 @@ function M.tokenise( content )
 
 					if TOKENS[#TOKENS] and ( TOKENS[#TOKENS].type == "START_OPENING_TAG") then
 						if RAW_TEXT_TAGS[word] then
-							print("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
+							logger.printerr("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
 							-- made possible because of the whitespace removal at the start
 							set_skipping_to("</" .. word)
 						end
@@ -263,7 +264,7 @@ function M.tokenise( content )
 
 					if TOKENS[#TOKENS] and ( TOKENS[#TOKENS].type == "START_OPENING_TAG" ) then
 						if RAW_TEXT_TAGS[word] then
-							print("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
+							logger.printerr("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
 							-- made possible because of the whitespace removal at the start
 							set_skipping_to("</" .. word)
 							text_memory = ""
@@ -401,7 +402,7 @@ function M.parse_tokens_into_document( TOKENS )
 
 				if curr_elem.parent == nil then
 					-- reached DOCUMENT root
-					print("Warning: reached document root while trying to match for closing " .. token.value .. " token.")
+					logger.printerr("Warning: reached document root while trying to match for closing " .. token.value .. " token.")
 					current_doc_element = DOCUMENT
 				else
 					current_doc_element = curr_elem.parent
@@ -581,8 +582,6 @@ function M._tostring(node, indent, include_internal_pseudoelements)
 	if not is_pseudo_element or include_internal_pseudoelements then
 		node_name = node_name .. ">"
 	end
-
-	--print( node_name )
 
 	local next_indent = indent + 1
 	if is_pseudo_element and not include_internal_pseudoelements then
