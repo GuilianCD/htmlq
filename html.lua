@@ -238,7 +238,9 @@ function M.tokenise( content )
 						end
 					end
 
-					table.insert( TOKENS, {type="WORD", value=word})
+					if not word:match("^%s*$") then
+						table.insert( TOKENS, {type="WORD", value=word})
+					end
 				else
 					table.insert( TOKENS, {type="TEXT", value=text_memory} )
 				end
@@ -271,8 +273,10 @@ function M.tokenise( content )
 						end
 					end
 
-					table.insert( TOKENS, {type="WORD", value=word})
-					text_memory = ""
+					if not word:match("^%s*$") then
+						table.insert( TOKENS, {type="WORD", value=word})
+						text_memory = ""
+					end
 
 					goto continue
 				end
@@ -418,7 +422,7 @@ function M.parse_tokens_into_document( TOKENS )
 					name = token.value:match("([%w-]+)")
 
 					if name == nil then
-						error("Unrecognised word: " .. name)
+						error("Unrecognised word: " .. tostring(name) .. " (Token ".. tostring(i) .." , type=" .. tostring(token.type) .. ", value=" .. tostring(token.value) .. ")")
 					end
 
 					current_doc_element.attributes[name] = true
