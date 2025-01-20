@@ -22,7 +22,7 @@ local function print_usage()
 		logger.print()
 		logger.print("  Flags:")
     logger.print("  -1, --first-only: return only the first match")
-    logger.print("  -q, --quiet: Don't print warnings")
+    logger.print("  -e, --errors: print warnings")
     logger.print("  -t, --text: Print only the innerText of the matched elements")
     os.exit(1)
 end

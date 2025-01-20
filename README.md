@@ -55,7 +55,7 @@ Where:
 ### Flags
 
 *   `-1`, `--first-only`: Return only the first match
-*   `-q`, `--quiet`: Don't print warnings
+*   `-e`, `--errors`: print warnings
 *   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/docs/Web/API/HTMLElement/innerText) of the matched elements
 
 ## Motivation
