@@ -21,7 +21,7 @@ local function print_usage()
     logger.print("  css_selector: CSS selector to search for")
 		logger.print()
 		logger.print("  Flags:")
-    logger.print("  -f, --first-only: return only the first match")
+    logger.print("  -1, --first-only: return only the first match")
     logger.print("  -q, --quiet: Don't print warnings")
     os.exit(1)
 end
@@ -41,7 +41,7 @@ local LONGHAND_FLAGS = {
 }
 
 local SHORTHAND_FLAGS = {
-	["f"] = FLAGS.FIRST_ONLY,
+	["1"] = FLAGS.FIRST_ONLY,
 	["q"] = FLAGS.NO_PRINT_ERRORS,
 }
 
