@@ -54,7 +54,7 @@ local SHORTHAND_FLAGS = {
 if #arg < 2 then
 	logger.printerr("Error: Not enough arguments")
 	print_usage()
-	return 1
+	os.exit(1)
 end
 
 local flags = {}
@@ -66,7 +66,7 @@ for _, argument in ipairs(arg) do
 			if not SHORTHAND_FLAGS[letter] then
 				logger.printerr("Unknown flag: -"..letter..".")
 				print_usage()
-				return 1
+				os.exit(1)
 			end
 
 			local flag = SHORTHAND_FLAGS[letter]
@@ -82,7 +82,7 @@ for _, argument in ipairs(arg) do
 		if not LONGHAND_FLAGS[flagname] then
 			logger.printerr("Unknown flag: --"..flagname..".")
 			print_usage()
-			return 1
+			os.exit(1)
 		end
 
 		local flag = LONGHAND_FLAGS[flagname]
@@ -106,7 +106,7 @@ end
 if #positionals > 2 then
 	logger.printerr("Error: too many arguments !")
 	print_usage()
-	return 1
+	os.exit(1)
 end
 
 local html_file = positionals[1]
@@ -115,13 +115,13 @@ local html = nil
 if html_file ~= "-" then
 	if not( file_exists( html_file )) then
 		logger.printerr("File doesn't exist: " .. html_file)
-		return 2
+		os.exit(2)
 	end
 
 	local handle = io.open( html_file, "r" )
 	if not handle then
 		logger.printerr("Failed to open file " .. html_file)
-		return 2
+		os.exit(2)
 	end
 
 	html = handle:read("a")
@@ -217,13 +217,13 @@ if flags[FLAGS.FIRST_ONLY] then
 
 		if flags[FLAGS.INNER_TEXT] then
 			logger.print( elements[1]:inner_text() )
-			return 0
+			os.exit(0)
 		end
 
 		logger.print( HTML.tostring( elements[1] ) )
 	end
 
-	return 0
+	os.exit(0)
 end
 
 for _, el in ipairs(elements) do
