@@ -41,15 +41,22 @@ Supported combinators are all the "basic" ones:
 
 ## Usage
 
-```
-Usage: lua main.lua [FLAGS] <html_path_or_minus> <css_selector>
-  html_path_or_minus: Path to HTML file or '-' for stdin
-  css_selector: CSS selector to search for
+Once compiled, you can run Htmlq using the following command:
 
-  Flags:
-  -f, --first-only: return only the first match
-  -q, --quiet: Don't print warnings
 ```
+./htmlq [FLAGS] <html_path_or_minus> <css_selector>
+```
+
+Where:
+
+*   `<html_path_or_minus>` is the path to the HTML file you want to parse, or `-` to read from stdin.
+*   `<css_selector>` is the CSS selector you want to use to query the HTML.
+
+### Flags
+
+*   `-1`, `--first-only`: Return only the first match
+*   `-q`, `--quiet`: Don't print warnings
+*   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/docs/Web/API/HTMLElement/innerText) of the matched elements
 
 ## Motivation
 
@@ -82,21 +89,3 @@ luastatic main.lua css.lua html.lua logging.lua /usr/lib/liblua5.4.so -o htmlq
 ```
 
 Note that all `.lua` files from the project need to be specified, with `main.lua` as the first one. Also, the path to `liblua` may vary according to your system. The example provided is for an installation on EndeavourOS.
-
-## Running
-
-Once compiled, you can run Htmlq using the following command:
-
-```
-./htmlq [FLAGS] <html_path_or_minus> <css_selector>
-```
-
-Where:
-
-*   `<html_path_or_minus>` is the path to the HTML file you want to parse, or `-` to read from stdin.
-*   `<css_selector>` is the CSS selector you want to use to query the HTML.
-
-### Flags
-
-*   `-f`, `--first-only`: Return only the first match
-*   `-q`, `--quiet`: Don't print warnings
