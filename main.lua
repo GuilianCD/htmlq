@@ -33,16 +33,19 @@ end
 local FLAGS = {
 	FIRST_ONLY = {},
 	NO_PRINT_ERRORS = {},
+	INNER_TEXT = {},
 }
 
 local LONGHAND_FLAGS = {
 	["first-only"] = FLAGS.FIRST_ONLY,
-	["quiet"] = FLAGS.NO_PRINT_ERRORS
+	["quiet"] = FLAGS.NO_PRINT_ERRORS,
+	["text"] = FLAGS.INNER_TEXT,
 }
 
 local SHORTHAND_FLAGS = {
 	["1"] = FLAGS.FIRST_ONLY,
 	["q"] = FLAGS.NO_PRINT_ERRORS,
+	["t"] = FLAGS.INNER_TEXT,
 }
 
 
@@ -210,6 +213,12 @@ end
 
 if flags[FLAGS.FIRST_ONLY] then
 	if #elements > 0 then
+
+		if flags[FLAGS.INNER_TEXT] then
+			logger.print( elements[1]:inner_text() )
+			return 0
+		end
+
 		logger.print( HTML.tostring( elements[1] ) )
 	end
 
@@ -217,5 +226,9 @@ if flags[FLAGS.FIRST_ONLY] then
 end
 
 for _, el in ipairs(elements) do
-		logger.print( HTML.tostring(el) )
+		if flags[FLAGS.INNER_TEXT] then
+			logger.print( el:inner_text() )
+		else
+			logger.print( HTML.tostring(el) )
+		end
 end

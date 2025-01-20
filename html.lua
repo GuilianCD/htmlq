@@ -39,6 +39,62 @@ local VOID_TAGS = {
 	wbr = true,
 }
 
+local INLINE_TAGS = {
+	-- Text formatting
+	a = true,
+	abbr = true,
+	b = true,
+	bdi = true,
+	bdo = true,
+	cite = true,
+	code = true,
+	data = true,
+	dfn = true,
+	em = true,
+	i = true,
+	kbd = true,
+	mark = true,
+	q = true,
+	ruby = true,
+	s = true,
+	samp = true,
+	small = true,
+	span = true,
+	strong = true,
+	sub = true,
+	sup = true,
+	time = true,
+	u = true,
+	var = true,
+
+	-- Interactive elements
+	button = true,
+	label = true,
+	select = true,
+	textarea = true,
+
+	-- Media/content
+	img = true,
+	picture = true,
+	map = true,
+	object = true,
+
+	-- Line break
+	br = true,
+	wbr = true,
+
+	-- Forms
+	input = true,
+	output = true,
+	progress = true,
+	meter = true,
+
+	-- Scripting
+	script = true,
+	noscript = true,
+	template = true,
+}
+
 
 function M.make_dom_element( tag_name, parent_elem )
 	local o = {
@@ -86,6 +142,23 @@ function M.make_dom_element( tag_name, parent_elem )
 			for _, child in ipairs(self.children or {}) do
 				child:foreach( fn )
 			end
+		end,
+
+		inner_text = function(self)
+			if self.tag_name == ":text" then
+				return self.content
+			end
+
+			local text = ""
+			for _, child in ipairs(self.children) do
+				text = text .. child:inner_text()
+
+				if not INLINE_TAGS[child.tag_name] then
+					text = text .. "\n"
+				end
+			end
+
+			return text
 		end
 	}
 
@@ -524,7 +597,7 @@ function M.clean_text_nodes(node)
 		return
 	end
 
-	node.content = trim( node.content:gsub("%s+", " ") )
+	node.content = node.content:gsub("%s+", " ")
 end
 
 
