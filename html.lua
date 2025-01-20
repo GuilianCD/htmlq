@@ -5,11 +5,11 @@ local function trim(str)
 end
 
 local function shallow_copy(t)
-  local t2 = {}
-  for k,v in pairs(t) do
-    t2[k] = v
-  end
-  return t2
+	local t2 = {}
+	for k,v in pairs(t) do
+		t2[k] = v
+	end
+	return t2
 end
 
 
@@ -646,7 +646,7 @@ function M._tostring(node, indent, include_internal_pseudoelements)
 	local node_name = ""
 
 	if not is_pseudo_element or include_internal_pseudoelements then
-	-- Print the current node's tag name
+		-- Print the current node's tag name
 		node_name = node_name .. "\n" .. indent_str .. "<" .. (node.tag_name or ":root")
 	end
 
