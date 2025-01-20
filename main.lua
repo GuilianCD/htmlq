@@ -32,19 +32,19 @@ end
 
 local FLAGS = {
 	FIRST_ONLY = {},
-	NO_PRINT_ERRORS = {},
+	DO_PRINT_ERRORS = {},
 	INNER_TEXT = {},
 }
 
 local LONGHAND_FLAGS = {
 	["first-only"] = FLAGS.FIRST_ONLY,
-	["quiet"] = FLAGS.NO_PRINT_ERRORS,
+	["errors"] = FLAGS.DO_PRINT_ERRORS,
 	["text"] = FLAGS.INNER_TEXT,
 }
 
 local SHORTHAND_FLAGS = {
 	["1"] = FLAGS.FIRST_ONLY,
-	["q"] = FLAGS.NO_PRINT_ERRORS,
+	["e"] = FLAGS.DO_PRINT_ERRORS,
 	["t"] = FLAGS.INNER_TEXT,
 }
 
@@ -97,7 +97,7 @@ for _, argument in ipairs(arg) do
 end
 
 
-if not flags[ FLAGS.NO_PRINT_ERRORS ] then
+if flags[ FLAGS.DO_PRINT_ERRORS ] then
 	logger.enable_printing_errors()
 end
 
