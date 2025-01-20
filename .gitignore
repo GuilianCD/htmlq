@@ -4,3 +4,5 @@
 main
 # Same but with correct name
 htmlq
+# gzipped manpage
+htmlq.1.gz

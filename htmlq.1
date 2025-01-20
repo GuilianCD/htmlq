@@ -1,0 +1,87 @@
+.TH HTMLQ 1 "January 2024" "Version 1.0" "User Commands"
+.SH NAME
+htmlq \- query HTML documents using CSS selectors
+.SH SYNOPSIS
+.B htmlq
+[\fIFLAGS\fR] \fIhtml_path_or_minus\fR \fIcss_selector\fR
+.SH DESCRIPTION
+.B htmlq
+is a command-line tool that allows querying HTML documents using CSS selectors, similar to jq but for HTML. It provides a way to extract specific elements from HTML documents using standard CSS selector syntax.
+.SH OPTIONS
+.TP
+.BR \-1 ", " \-\-first\-only
+Return only the first matching element
+.TP
+.BR \-e ", " \-\-errors
+Print warning messages
+.TP
+.BR \-t ", " \-\-text
+Print only the innerText of matched elements
+.SH ARGUMENTS
+.TP
+.I html_path_or_minus
+Path to HTML file to parse, or '-' to read from standard input
+.TP
+.I css_selector
+CSS selector to query the HTML document
+.SH SUPPORTED SELECTORS
+.TP
+.B Simple Selectors
+.RS
+.TP
+\fBtag name\fR (e.g., h1)
+Select elements by tag name
+.TP
+\fB.class\fR
+Select elements by class name
+.TP
+\fB#id\fR
+Select elements by id
+.RE
+.TP
+.B Combinators
+.RS
+.TP
+\fBspace\fR
+Descendant combinator
+.TP
+\fB>\fR
+Child combinator
+.TP
+\fB+\fR
+Next sibling combinator
+.TP
+\fB~\fR
+Subsequent sibling combinator
+.RE
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+No matches found
+.TP
+.B 2
+Invalid arguments
+.TP
+.B 3
+Failed to read input
+.SH EXAMPLES
+.TP
+Extract all paragraphs with class 'content':
+.B htmlq
+input.html "p.content"
+.TP
+Read HTML from stdin and get first div with id 'main':
+echo "<html>...</html>" | \fBhtmlq\fR - "div#main" --first-only
+.TP
+Get only text content from all h1 headers:
+.B htmlq
+-t input.html "h1"
+.SH LIMITATIONS
+Column and namespace combinators are not supported. The universal selector (*) and attribute selectors are not implemented.
+.SH BUGS
+Report bugs at: https://git.cafeduvesper.net/guilian/htmlq/issues
+.SH AUTHOR
+Written by Guilian Celin--Davanture <guilian@cafeduvesper.net>
