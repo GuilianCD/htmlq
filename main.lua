@@ -125,7 +125,7 @@ if html_file ~= "-" then
 
 	html = handle:read("a")
 else
-	html = io.read()
+	html = io.read("a")
 end
 
 local document = HTML.parse( html )
