@@ -78,7 +78,7 @@ luarocks install luastatic
 Once `luastatic` is installed, you can compile Htmlq by running the following command in your terminal, from the project's root directory:
 
 ```
-luastatic main.lua css.lua html.lua logging.lua /usr/lib/liblua5.4.so
+luastatic main.lua css.lua html.lua logging.lua /usr/lib/liblua5.4.so -o htmlq
 ```
 
 Note that all `.lua` files from the project need to be specified, with `main.lua` as the first one. Also, the path to `liblua` may vary according to your system. The example provided is for an installation on EndeavourOS.

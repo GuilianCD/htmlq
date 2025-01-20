@@ -2,3 +2,5 @@
 *.luastatic.c
 # Compiled executable from main.lua
 main
+# Same but with correct name
+htmlq
