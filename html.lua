@@ -386,44 +386,58 @@ end
 
 
 function M.check_simple_selector(element, selector)
-		-- Skip text nodes
-		if element.tag_name == ":text" then
+	-- Skip text nodes
+	if element.tag_name == ":text" then
+		return false
+	end
+
+	-- Check tag name if specified
+	if selector.tag_name and element.tag_name ~= selector.tag_name then
+		return false
+	end
+
+	-- Check ID if specified
+	if selector.id and element.attributes.id ~= selector.id then
+		return false
+	end
+
+	-- Check classes if specified
+	if selector.class and #selector.class > 0 then
+		local element_classes = element.attributes.class
+		if not element_classes then
 			return false
 		end
 
-		-- Check tag name if specified
-		if selector.tag_name and element.tag_name ~= selector.tag_name then
-			return false
-		end
-
-		-- Check ID if specified
-		if selector.id and element.attributes.id ~= selector.id then
-			return false
-		end
-
-		-- Check classes if specified
-		if selector.class and #selector.class > 0 then
-			local element_classes = element.attributes.class
-			if not element_classes then
+		for _, class in ipairs(selector.class) do
+			local found = false
+			for _, elem_class in ipairs(element_classes) do
+				if elem_class == class then
+					found = true
+					break
+				end
+			end
+			if not found then
 				return false
 			end
-
-			for _, class in ipairs(selector.class) do
-				local found = false
-				for _, elem_class in ipairs(element_classes) do
-					if elem_class == class then
-						found = true
-						break
-					end
-				end
-				if not found then
-					return false
-				end
-			end
 		end
-
-		return true
 	end
+
+	for attr_name, attr_value in pairs(selector.attributes_values) do
+		local elem_attr_value = element.attributes[attr_name]
+		if elem_attr_value ~= attr_value then
+			return false
+		end
+	end
+
+	-- Check attribute presence selectors
+	for _, attr_name in ipairs(selector.attributes_present) do
+		if not element.attributes[attr_name] then
+			return false
+		end
+	end
+
+	return true
+end
 
 function M.query_simple_selector(document, selector)
 	local matches = {}

@@ -66,7 +66,8 @@ local function parse_compound_selector( tokeniser )
 		tag_name = nil,
 		id = nil,
 		class = {},
-		attributes = {},
+		attributes_values = {},
+		attributes_present = {},
 	}
 
 	--local selectors = {}
@@ -106,6 +107,37 @@ local function parse_compound_selector( tokeniser )
 			end
 			--table.insert(selectors, {type = "id", value = name})
 			selector.id = name
+		elseif char == "[" then
+			tokeniser.next() -- consume leading [
+
+			local name = tokeniser.read_identifier()
+
+			if tokeniser.peek() == "=" then
+				tokeniser.next()
+
+				if tokeniser.peek() ~= "\"" then
+					error("Expected opening quote \" at pos " .. tokeniser.pos() )
+				end
+				tokeniser.next() -- consume leading "
+
+				local value = ""
+				while tokeniser.peek() ~= "\"" do
+					value = value .. tokeniser.peek()
+					tokeniser.next()
+				end
+
+				tokeniser.next() -- consume trailing "
+
+				selector.attributes_values[name] = value
+			else
+				table.insert( selector.attributes_present, name )
+			end
+
+			if tokeniser.peek() ~= "]" then
+				error("Expected closing bracket (']') at " .. tokeniser.pos())
+			end
+
+			tokeniser.next() -- consume trailing ]
 		else
 			break
 		end
