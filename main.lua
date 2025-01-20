@@ -1,9 +1,9 @@
 #!/bin/env lua
 
-local HTML = require(".html")
-local CSS = require(".css")
+local HTML = require("html")
+local CSS = require("css")
 
-local logger = require(".logging")
+local logger = require("logging")
 
 
 

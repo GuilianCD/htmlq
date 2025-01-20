@@ -1,4 +1,4 @@
-local logger = require(".logging")
+local logger = require("logging")
 
 local function trim(str)
 	return str:match("^%s*(.-)%s*$")
