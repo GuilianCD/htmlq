@@ -24,10 +24,16 @@ local function print_usage()
     logger.print("  -1, --first-only: return only the first match")
     logger.print("  -e, --errors: print warnings")
     logger.print("  -t, --text: Print only the innerText of the matched elements")
-    os.exit(1)
 end
 
 
+
+local RETURN_CODES = {
+	OK = 0,
+	NOTHING_FOUND = 1,
+	ARGUMENTS_ERROR = 2,
+	FAILED_INPUT = 3,
+}
 
 
 
@@ -54,7 +60,7 @@ local SHORTHAND_FLAGS = {
 if #arg < 2 then
 	logger.printerr("Error: Not enough arguments")
 	print_usage()
-	os.exit(1)
+	os.exit( RETURN_CODES.ARGUMENTS_ERROR )
 end
 
 local flags = {}
@@ -66,7 +72,7 @@ for _, argument in ipairs(arg) do
 			if not SHORTHAND_FLAGS[letter] then
 				logger.printerr("Unknown flag: -"..letter..".")
 				print_usage()
-				os.exit(1)
+				os.exit( RETURN_CODES.ARGUMENTS_ERROR )
 			end
 
 			local flag = SHORTHAND_FLAGS[letter]
@@ -82,7 +88,7 @@ for _, argument in ipairs(arg) do
 		if not LONGHAND_FLAGS[flagname] then
 			logger.printerr("Unknown flag: --"..flagname..".")
 			print_usage()
-			os.exit(1)
+			os.exit( RETURN_CODES.ARGUMENTS_ERROR )
 		end
 
 		local flag = LONGHAND_FLAGS[flagname]
@@ -106,7 +112,7 @@ end
 if #positionals > 2 then
 	logger.printerr("Error: too many arguments !")
 	print_usage()
-	os.exit(1)
+	os.exit( RETURN_CODES.ARGUMENTS_ERROR )
 end
 
 local html_file = positionals[1]
@@ -115,13 +121,13 @@ local html = nil
 if html_file ~= "-" then
 	if not( file_exists( html_file )) then
 		logger.printerr("File doesn't exist: " .. html_file)
-		os.exit(2)
+		os.exit( RETURN_CODES.FAILED_INPUT )
 	end
 
 	local handle = io.open( html_file, "r" )
 	if not handle then
 		logger.printerr("Failed to open file " .. html_file)
-		os.exit(2)
+		os.exit( RETURN_CODES.FAILED_INPUT )
 	end
 
 	html = handle:read("a")
@@ -210,20 +216,22 @@ end
 
 
 
+if #elements == 0 then
+	os.exit( RETURN_CODES.NOTHING_FOUND )
+end
 
 
 if flags[FLAGS.FIRST_ONLY] then
 	if #elements > 0 then
-
 		if flags[FLAGS.INNER_TEXT] then
 			logger.print( elements[1]:inner_text() )
-			os.exit(0)
+			os.exit( RETURN_CODES.OK )
 		end
 
 		logger.print( HTML.tostring( elements[1] ) )
 	end
 
-	os.exit(0)
+	os.exit( RETURN_CODES.OK )
 end
 
 for _, el in ipairs(elements) do
