@@ -55,7 +55,6 @@ Where:
 *   `-1`, `--first-only`: Return only the first match
 *   `-e`, `--errors`: print warnings
 *   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/docs/Web/API/HTMLElement/innerText) of the matched elements
-*   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/
 *   `-a`, `--select-attribute`: Print the value of the attribute on matched elements. Supersedes -t.
 
 ## Motivation
