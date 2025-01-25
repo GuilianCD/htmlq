@@ -356,16 +356,13 @@ function M.tokenise( content )
 				end
 			end
 
-
 			if char == "'" or char == '"' then
-				if currently_opened_quotes == char then
+				-- found matching closing quote type
+				if char == currently_opened_quotes then
 					currently_opened_quotes = nil
-				else
+				elseif currently_opened_quotes == nil then
 					currently_opened_quotes = char
 				end
-
-				text_memory = text_memory .. char
-				goto continue
 			end
 
 			text_memory = text_memory .. char
