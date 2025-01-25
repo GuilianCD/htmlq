@@ -207,71 +207,22 @@ function M.tokenise( content )
 	local currently_opened_quotes = nil
 	local text_memory = ""
 
-	local skipping_from = nil
-	local skip_target = nil
-	local skip_mode = "before"
-
-	local function set_skipping_to( str, mode )
-		mode = mode or "before"
-		if mode ~= "before" and mode ~= "after" then
-			error("Unexpected skipping mode: " .. mode .. ", in looking for " .. str)
-		end
-
-		skip_target = str
-		skip_mode = mode
-	end
-
-
-
 	local i = 1
 
 	while i <= #content do
 		local char = content:sub(i,i)
 
-		if skip_target ~= nil then
-			if skipping_from == nil then
-				skipping_from = i
-			end
-
-			if skip_mode == "before" then
-				local end_i =  i + #skip_target - 1
-
-				if trim(content:sub(i, end_i)) == skip_target then
-					table.insert( TOKENS, {type="TEXT", value=content:sub(skipping_from, i-1)} )
-
-					-- release from skip
-					--i = end_i - 1
-					i = i - 1
-					skip_target = nil
-					skipping_from = nil
-				end
-
-				goto continue
-			else
-				local start_i =  i - #skip_target + 1
-
-				if trim(content:sub(start_i, i)) == skip_target then
-					table.insert( TOKENS, {type="TEXT", value=content:sub(skipping_from, start_i-1)} )
-
-					-- release from skip
-					i = start_i
-					skip_target = nil
-					skipping_from = nil
-				end
-
-				goto continue
-			end
-
-
-
-		end
-
-
 
 
 		if char == "<" then
 			if content:sub(i, i+3) == "<!--" then
-				set_skipping_to("-->", "after")
+				local end_i = content:find("-->", i+3, true)
+				if end_i then
+					i = end_i + 2
+				else
+					i = #content
+				end
+
 				goto continue
 			end
 
@@ -308,7 +259,7 @@ function M.tokenise( content )
 						if RAW_TEXT_TAGS[word] then
 							logger.printerr("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
 							-- made possible because of the whitespace removal at the start
-							set_skipping_to("</" .. word)
+							i = content:find("</"..word) - 1
 						end
 					end
 
@@ -338,12 +289,12 @@ function M.tokenise( content )
 					if TOKENS[#TOKENS] and ( TOKENS[#TOKENS].type == "START_OPENING_TAG" ) then
 						if RAW_TEXT_TAGS[word] then
 							logger.printerr("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
-							-- made possible because of the whitespace removal at the start
-							set_skipping_to("</" .. word)
 							text_memory = ""
 
 							-- advance to closing ">"
 							i = content:find(">", i)
+							-- made possible because of the whitespace removal at the start
+							i = content:find("</"..word) - 1
 						end
 					end
 
