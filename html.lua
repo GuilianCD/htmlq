@@ -159,7 +159,7 @@ function M.make_dom_element( tag_name, parent_elem )
 			end
 
 			return text
-		end
+		end,
 	}
 
 	if parent_elem then
@@ -227,7 +227,7 @@ function M.tokenise( content )
 			end
 
 			if content:sub(i, i+1) == "<!" then
-				i = content:find(">", i)
+				i = content:find(">", i, true)
 				goto continue
 			end
 
@@ -259,7 +259,7 @@ function M.tokenise( content )
 						if RAW_TEXT_TAGS[word] then
 							logger.printerr("Warning: "..word.." tags may contain text that would be incorrectly parsed as HTML.")
 							-- made possible because of the whitespace removal at the start
-							i = content:find("</"..word) - 1
+							i = content:find("</"..word, i, true) - 1
 						end
 					end
 
@@ -292,9 +292,9 @@ function M.tokenise( content )
 							text_memory = ""
 
 							-- advance to closing ">"
-							i = content:find(">", i)
+							i = content:find(">", i, true)
 							-- made possible because of the whitespace removal at the start
-							i = content:find("</"..word) - 1
+							i = content:find("</"..word, i, true) - 1
 						end
 					end
 

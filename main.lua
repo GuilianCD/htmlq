@@ -27,21 +27,22 @@ local logger = require("logging")
 
 
 local function file_exists(name)
-   local f=io.open(name,"r")
-   if f~=nil then io.close(f) return true else return false end
+	local f=io.open(name,"r")
+	if f~=nil then io.close(f) return true else return false end
 end
 
 
 
 local function print_usage()
-    logger.print("Usage: lua main.lua [FLAGS] <html_path_or_minus> <css_selector>")
-    logger.print("  html_path_or_minus: Path to HTML file or '-' for stdin")
-    logger.print("  css_selector: CSS selector to search for")
-		logger.print()
-		logger.print("  Flags:")
-    logger.print("  -1, --first-only: return only the first match")
-    logger.print("  -e, --errors: print warnings")
-    logger.print("  -t, --text: Print only the innerText of the matched elements")
+	logger.print("Usage: lua main.lua [FLAGS] <html_path_or_minus> <css_selector>")
+	logger.print("  html_path_or_minus: Path to HTML file or '-' for stdin")
+	logger.print("  css_selector: CSS selector to search for")
+	logger.print()
+	logger.print("  Flags:")
+	logger.print("  -1, --first-only: return only the first match")
+	logger.print("  -e, --errors: print warnings")
+	logger.print("  -t, --text: Print only the innerText of the matched elements")
+	logger.print("  -a, --select-attribute: Print the value of the attribute on matched elements. Supersedes -t.")
 end
 
 
@@ -59,18 +60,26 @@ local FLAGS = {
 	FIRST_ONLY = {},
 	DO_PRINT_ERRORS = {},
 	INNER_TEXT = {},
+	SELECT_ATTRIBUTE = {}
 }
 
 local LONGHAND_FLAGS = {
 	["first-only"] = FLAGS.FIRST_ONLY,
 	["errors"] = FLAGS.DO_PRINT_ERRORS,
 	["text"] = FLAGS.INNER_TEXT,
+	["select-attribute"] = FLAGS.SELECT_ATTRIBUTE,
 }
 
 local SHORTHAND_FLAGS = {
 	["1"] = FLAGS.FIRST_ONLY,
 	["e"] = FLAGS.DO_PRINT_ERRORS,
 	["t"] = FLAGS.INNER_TEXT,
+	["a"] = FLAGS.SELECT_ATTRIBUTE,
+}
+
+
+local FLAG_NEEDS_VALUE = {
+	[FLAGS.SELECT_ATTRIBUTE] = true,
 }
 
 
@@ -84,42 +93,101 @@ end
 local flags = {}
 local positionals = {}
 
-for _, argument in ipairs(arg) do
-	if argument:match("^%-%w+$") then
-		for letter in argument:sub(2):gmatch("(%w)") do
-			if not SHORTHAND_FLAGS[letter] then
-				logger.printerr("Unknown flag: -"..letter..".")
-				print_usage()
-				os.exit( RETURN_CODES.ARGUMENTS_ERROR )
-			end
+local i = 1
+while i <= #arg do
+	local argument = arg[i]
 
+	-- Handle shorthand flags (-a, -1, etc.)
+	if argument:match("^%-%w+$") then
+		local flag_str = argument:sub(2)
+
+		-- Handle single-letter flags
+		if #flag_str == 1 then
+			local letter = flag_str
 			local flag = SHORTHAND_FLAGS[letter]
 
-			if flags[flag] then
-				logger.printerr("Warning: passed -" .. letter .. " flag already !")
+			if not flag then
+				logger.printerr("Unknown flag: -"..letter)
+				print_usage()
+				os.exit(RETURN_CODES.ARGUMENTS_ERROR)
 			end
 
-			flags[flag] = true
-		end
-	elseif argument:match("^%-%-[%w%-]+$") then
-		local flagname = argument:sub(3)
-		if not LONGHAND_FLAGS[flagname] then
-			logger.printerr("Unknown flag: --"..flagname..".")
-			print_usage()
-			os.exit( RETURN_CODES.ARGUMENTS_ERROR )
+			-- Handle flags that require values
+			if FLAG_NEEDS_VALUE[flag] then
+				if i == #arg then
+					logger.printerr("Flag -"..letter.." requires a value")
+					os.exit(RETURN_CODES.ARGUMENTS_ERROR)
+				end
+				flags[flag] = arg[i+1]
+				i = i + 2  -- Skip next argument as it's the value
+			else
+				-- Handle regular boolean flags
+				if flags[flag] then
+					logger.printerr("Warning: passed -"..letter.." flag already!")
+				end
+				flags[flag] = true
+				i = i + 1
+			end
+
+		else
+			-- Handle grouped flags (-abc)
+			for letter in flag_str:gmatch("(%w)") do
+				local flag = SHORTHAND_FLAGS[letter]
+
+				if not flag then
+					logger.printerr("Unknown flag in group: -"..letter)
+					print_usage()
+					os.exit(RETURN_CODES.ARGUMENTS_ERROR)
+				end
+
+				if FLAG_NEEDS_VALUE[flag] then
+					logger.printerr("Cannot use value-taking flags in groups: -"..letter)
+					os.exit(RETURN_CODES.ARGUMENTS_ERROR)
+				end
+
+				if flags[flag] then
+					logger.printerr("Warning: passed -"..letter.." flag already!")
+				end
+				flags[flag] = true
+			end
+			i = i + 1
 		end
 
+		-- Handle long flags (--flag)
+	elseif argument:match("^%-%-") then
+		local flagname = argument:sub(3)
 		local flag = LONGHAND_FLAGS[flagname]
 
-		if flags[flag] then
-			logger.printerr("Warning: passed --" .. flagname .. " flag already !")
+		if not flag then
+			logger.printerr("Unknown flag: --"..flagname)
+			print_usage()
+			os.exit(RETURN_CODES.ARGUMENTS_ERROR)
 		end
 
-		flags[flag] = true
+		-- Handle flags that require values
+		if FLAG_NEEDS_VALUE[flag] then
+			if i == #arg then
+				logger.printerr("Flag --"..flagname.." requires a value")
+				os.exit(RETURN_CODES.ARGUMENTS_ERROR)
+			end
+			flags[flag] = arg[i+1]
+			i = i + 2  -- Skip next argument as it's the value
+		else
+			-- Handle regular boolean flags
+			if flags[flag] then
+				logger.printerr("Warning: passed --"..flagname.." flag already!")
+			end
+			flags[flag] = true
+			i = i + 1
+		end
+
 	else
-		table.insert( positionals, argument )
+		-- Handle positional arguments
+		table.insert(positionals, argument)
+		i = i + 1
 	end
 end
+
 
 
 if flags[ FLAGS.DO_PRINT_ERRORS ] then
@@ -201,8 +269,8 @@ while current_selector.combinator ~= nil do
 		for _, element in ipairs( elements ) do
 			local next_sibling = element:get_next_sibling()
 			while next_sibling and next_sibling.tag_name == ":text" do
-			 next_sibling = next_sibling:get_next_sibling()
-		 end
+				next_sibling = next_sibling:get_next_sibling()
+			end
 
 			if next_sibling and next_sibling:check_simple_selector( next_selector.selector ) then
 				table.insert( new_elements, next_sibling )
@@ -238,24 +306,51 @@ if #elements == 0 then
 	os.exit( RETURN_CODES.NOTHING_FOUND )
 end
 
-
+local MAX_NUMBER_OF_ELEMENTS_TO_SHOW = #elements
 if flags[FLAGS.FIRST_ONLY] then
-	if #elements > 0 then
-		if flags[FLAGS.INNER_TEXT] then
-			logger.print( elements[1]:inner_text() )
-			os.exit( RETURN_CODES.OK )
-		end
+	MAX_NUMBER_OF_ELEMENTS_TO_SHOW = 1
+end
 
-		logger.print( HTML.tostring( elements[1] ) )
+
+
+
+
+local attr = flags[FLAGS.SELECT_ATTRIBUTE]
+if attr then
+	local spoof_nil = {}
+	local attrs = {}
+
+	local i = 1
+	while i <= MAX_NUMBER_OF_ELEMENTS_TO_SHOW do
+		local el = elements[i]
+
+		local attribute_value = el.attributes[attr]
+
+		table.insert( attrs, attribute_value or spoof_nil )
+
+		i = i+1
+	end
+
+	local nb_non_nil_values = 0
+	for _, val in ipairs(attrs) do
+		if val ~= spoof_nil then
+			nb_non_nil_values = nb_non_nil_values + 1
+		end
+	end
+
+	if nb_non_nil_values == 0 then
+		os.exit( RETURN_CODES.NOTHING_FOUND )
+	end
+
+	for _, val in ipairs(attrs) do
+		if val ~= spoof_nil then
+			print(val)
+		else
+			print()
+		end
 	end
 
 	os.exit( RETURN_CODES.OK )
 end
 
-for _, el in ipairs(elements) do
-		if flags[FLAGS.INNER_TEXT] then
-			logger.print( el:inner_text() )
-		else
-			logger.print( HTML.tostring(el) )
-		end
 end

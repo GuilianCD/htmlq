@@ -34,9 +34,7 @@ Supported combinators are all the "basic" ones:
 
 ### TODO
 
-- [ ] `--text` option to only get the text in the matched elements
 - [ ] Universal selector (`*` to match any element)
-- [ ] Attribute selectors (`[attr="value"]`)
 - [ ] A way to "group" selectors, e.g. `aside {p, footer}` to select all `p`s and `footer`s in `aside`s ? 
 
 ## Usage
@@ -57,6 +55,8 @@ Where:
 *   `-1`, `--first-only`: Return only the first match
 *   `-e`, `--errors`: print warnings
 *   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/docs/Web/API/HTMLElement/innerText) of the matched elements
+*   `-t`, `--text`: Print only the [innerText](https://developer.mozilla.org/fr/
+*   `-a`, `--select-attribute`: Print the value of the attribute on matched elements. Supersedes -t.
 
 ## Motivation
 
