@@ -502,7 +502,7 @@ function M.parse_tokens_into_document( TOKENS )
 
 
 			if in_opening_tag_for then
-				local pattern = "([%w-]+)=['\"](.-)['\"]"
+				local pattern = "([%w-]+)=['\"](.+)['\"]"
 
 				local name, raw_value = token.value:match(pattern)
 
